@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable
+from typing import Callable, Literal
 from ollama import AsyncClient
 import sys
 from PySide6.QtCore import Qt
@@ -13,10 +13,13 @@ async def chat():
     print(response.content)
 
 
-def make_icon_button(icon_name: str, on_click: Callable[[], None]):
+IconSize = Literal["small", "large"]
+
+def make_icon_button(icon_name: str, size: IconSize = "small", on_click: Callable[[], None] = None):
+    size_px = 24 if size == "small" else 32
     return QtWidgets.QPushButton(
         icon=qtawesome.icon(icon_name, color="#F2DDCC"),
-        iconSize=QtCore.QSize(32, 32),
+        iconSize=QtCore.QSize(size_px, size_px),
         styleSheet="""
             QPushButton {
                 border: none;
@@ -24,7 +27,7 @@ def make_icon_button(icon_name: str, on_click: Callable[[], None]):
                 padding: 2;
             }
             :hover {
-                background-color: #101420;
+                background-color: rgba(0,0,0, 0.4);
             }
         """,
         clicked=on_click,
@@ -49,7 +52,7 @@ def make_input_bar(
     )
     frame.setLayout(layout := QtWidgets.QHBoxLayout())
     layout.addWidget(
-        make_icon_button(icon_name="mdi.plus", on_click=on_new_chat),
+        make_icon_button(icon_name="mdi.plus", size="large", on_click=on_new_chat),
     )
     layout.addWidget(
         edit := QtWidgets.QLineEdit(
@@ -101,19 +104,13 @@ def make_chat_bot_message_actions():
     widget = QtWidgets.QWidget()
     layout = QtWidgets.QHBoxLayout(widget)
     layout.addWidget(
-        QtWidgets.QPushButton(
-            icon=qtawesome.icon("mdi.thumb-up", color="#F2DDCC"), styleSheet=styleSheet
-        )
+        make_icon_button("mdi.thumb-up", on_click=lambda: print("👍"))
     )
     layout.addWidget(
-        QtWidgets.QPushButton(
-            icon=qtawesome.icon("mdi.thumb-down", color="#F2DDCC"),
-        )
+        make_icon_button("mdi.thumb-down", on_click=lambda: print("👎"))
     )
     layout.addWidget(
-        QtWidgets.QPushButton(
-            icon=qtawesome.icon("mdi.content-copy", color="#F2DDCC"),
-        )
+        make_icon_button("mdi.content-copy", on_click=lambda: print("📤"))
     )
     return widget
 
