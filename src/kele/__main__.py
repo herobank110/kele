@@ -45,11 +45,12 @@ def make_input_bar():
         edit := QtWidgets.QLineEdit(
             placeholderText="Message Copilot",
             styleSheet="""
-                padding: 10 20;
-                border-radius: 16;
+                padding: 10 15;
+                border-radius: 18;
                 background-color: #0E131F;
-                color: #7E87A6;
-                font-size: 18;
+                placeholder-text-color: #7E87A6;
+                color: #F1F1F2;
+                font-size: 12pt;
                 font-family: 'Segoe UI';
                 border: none;
             """,
@@ -57,6 +58,14 @@ def make_input_bar():
         ),
     )
     return frame
+
+
+def make_how_can_i_help():
+    return QtWidgets.QLabel(
+        "Hey, how can I help?",
+        styleSheet="font-size: 32px;",
+        alignment=Qt.AlignmentFlag.AlignCenter,
+    )
 
 
 def make_window():
@@ -73,12 +82,7 @@ def make_window():
     window.setMinimumSize(800, 600)
     frame.setLayout(layout := QtWidgets.QVBoxLayout())
     layout.setContentsMargins(20, 20, 20, 20)
-    h = QtWidgets.QLabel(
-        "Hey, how can I help?",
-        styleSheet="font-size: 32px;",
-        alignment=Qt.AlignmentFlag.AlignCenter,
-    )
-    layout.addWidget(h, 1)
+    layout.addWidget(make_how_can_i_help(), stretch=1)
     layout.addWidget(make_input_bar())
     return window
 
