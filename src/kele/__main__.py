@@ -6,6 +6,9 @@ from PySide6 import QtWidgets, QtCore
 import qtawesome
 
 
+chat_history = []
+
+
 async def chat():
     message = {"role": "user", "content": "Why is the sky blue?"}
     response = await AsyncClient().chat(model="deepseek-r1", messages=[message])
@@ -66,7 +69,7 @@ def make_input_bar():
 
 def make_how_can_i_help():
     return QtWidgets.QLabel(
-        "Hey, how can I help?",
+        text="Hey, how can I help?",
         styleSheet="font-size: 32px;",
         alignment=Qt.AlignmentFlag.AlignCenter,
     )
