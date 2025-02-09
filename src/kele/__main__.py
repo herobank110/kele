@@ -13,6 +13,24 @@ async def chat():
     print(response.content)
 
 
+def make_icon_button(icon_name: str, on_click: Callable[[], None]):
+    return QtWidgets.QPushButton(
+        icon=qtawesome.icon(icon_name, color="#F2DDCC"),
+        iconSize=QtCore.QSize(32, 32),
+        styleSheet="""
+            QPushButton {
+                border: none;
+                border-radius: 10;
+                padding: 2;
+            }
+            :hover {
+                background-color: #101420;
+            }
+        """,
+        clicked=on_click,
+    )
+
+
 def make_input_bar(
     on_new_chat: Callable[[], None],
     on_enter: Callable[[str], None],
@@ -31,21 +49,7 @@ def make_input_bar(
     )
     frame.setLayout(layout := QtWidgets.QHBoxLayout())
     layout.addWidget(
-        QtWidgets.QPushButton(
-            icon=qtawesome.icon("mdi.plus", color="#F2DDCC"),
-            iconSize=QtCore.QSize(32, 32),
-            styleSheet="""
-                QPushButton {
-                    border: none;
-                    border-radius: 10;
-                    padding: 2;
-                }
-                :hover {
-                    background-color: #101420;
-                }
-            """,
-            clicked=on_new_chat,
-        )
+        make_icon_button(icon_name="mdi.plus", on_click=on_new_chat),
     )
     layout.addWidget(
         edit := QtWidgets.QLineEdit(
@@ -93,19 +97,48 @@ def make_user_chat_message(text: str):
     )
 
 
+def make_chat_bot_message_actions():
+    widget = QtWidgets.QWidget()
+    layout = QtWidgets.QHBoxLayout(widget)
+    layout.addWidget(
+        QtWidgets.QPushButton(
+            icon=qtawesome.icon("mdi.thumb-up", color="#F2DDCC"), styleSheet=styleSheet
+        )
+    )
+    layout.addWidget(
+        QtWidgets.QPushButton(
+            icon=qtawesome.icon("mdi.thumb-down", color="#F2DDCC"),
+        )
+    )
+    layout.addWidget(
+        QtWidgets.QPushButton(
+            icon=qtawesome.icon("mdi.content-copy", color="#F2DDCC"),
+        )
+    )
+    return widget
+
+
 def make_bot_chat_message(text: str):
-    return QtWidgets.QLabel(
-        text=text,
-        styleSheet="""
+    widget = QtWidgets.QWidget()
+    layout = QtWidgets.QVBoxLayout(widget)
+    layout.addWidget(
+        QtWidgets.QLabel(
+            text=text,
+            styleSheet="""
             color: #F2DDCC;
             padding: 10;
             border-radius: 10;
             font-size: 12pt;
             font-family: 'Segoe UI';
         """,
-        wordWrap=True,
-        textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
+            wordWrap=True,
+            textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
+        )
     )
+    layout.addWidget(
+        make_chat_bot_message_actions(), alignment=Qt.AlignmentFlag.AlignLeft
+    )
+    return widget
 
 
 def make_chat_log():
