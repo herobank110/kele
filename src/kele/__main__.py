@@ -75,13 +75,9 @@ def make_how_can_i_help():
 
 
 def make_user_chat_message(text: str):
-    widget = QtWidgets.QWidget()
-    layout = QtWidgets.QHBoxLayout(widget)
-    layout.addStretch(20)
-    layout.addWidget(
-        QtWidgets.QLabel(
-            text=text,
-            styleSheet="""
+    return QtWidgets.QLabel(
+        text=text,
+        styleSheet="""
                 background-color: #1D2439;
                 color: #F2DDCC;
                 padding: 10;
@@ -89,31 +85,44 @@ def make_user_chat_message(text: str):
                 font-size: 12pt;
                 font-family: 'Segoe UI';
             """,
-            wordWrap=True,
-            textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
-            sizePolicy=QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding),
+        wordWrap=True,
+        textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
+        sizePolicy=QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding
         ),
-        alignment=Qt.AlignmentFlag.AlignRight,
-        stretch=80
     )
-    return widget
+
+
+def make_bot_chat_message(text: str):
+    return QtWidgets.QLabel(
+        text=text,
+        styleSheet="""
+            color: #F2DDCC;
+            padding: 10;
+            border-radius: 10;
+            font-size: 12pt;
+            font-family: 'Segoe UI';
+        """,
+        wordWrap=True,
+        textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
+    )
 
 
 def make_chat_log():
     scroll = QtWidgets.QScrollArea(widgetResizable=True)
-    scroll.setWidget(inner := QtWidgets.QWidget(styleSheet="border: 1px solid red;"))
+    scroll.setWidget(inner := QtWidgets.QWidget())
     inner.setLayout(layout := QtWidgets.QVBoxLayout())
     layout.addWidget(
-        make_user_chat_message(
-            "It seems like you've entered a string of random characters. Was there something specific you needed help with, or perhaps did you mean to say something\n\n\n else? I'm here to assist you with any questions or topics you'd like to discuss!"
+        make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
+    )
+    layout.addWidget(
+        make_bot_chat_message(
+            "Hey! It seems like you're really curious about how I'm doing. I'm great, thanks! What's on your mind today? 😊"
         )
-    )  # , alignment=Qt.AlignmentFlag.AlignRight)
+    )
     layout.addWidget(
-        make_user_chat_message("Hello")
-    )  # , alignment=Qt.AlignmentFlag.AlignRight)
-    layout.addWidget(
-        make_user_chat_message("Hello")
-    )  # , alignment=Qt.AlignmentFlag.AlignRight)
+        make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
+    )
     layout.addStretch(1)
     return scroll
 
