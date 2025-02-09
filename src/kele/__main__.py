@@ -6,8 +6,6 @@ from PySide6 import QtWidgets, QtCore
 import qtawesome
 
 
-chat_history = []
-
 
 async def chat():
     message = {"role": "user", "content": "Why is the sky blue?"}
@@ -75,6 +73,17 @@ def make_how_can_i_help():
     )
 
 
+def make_chat_screen():
+    chat_history = []
+
+    widget = QtWidgets.QWidget()
+    widget.setLayout(layout := QtWidgets.QVBoxLayout())
+    layout.setContentsMargins(20, 20, 20, 20)
+    layout.addWidget(make_how_can_i_help(), stretch=1)
+    layout.addWidget(make_input_bar())
+    return widget
+
+
 def make_window():
     window = QtWidgets.QMainWindow(
         windowTitle="kele",
@@ -82,15 +91,14 @@ def make_window():
             frame := QtWidgets.QFrame(
                 styleSheet="""
                     background-color: #101524;
-                """
+                """,
             )
         ),
     )
     window.setMinimumSize(800, 600)
     frame.setLayout(layout := QtWidgets.QVBoxLayout())
-    layout.setContentsMargins(20, 20, 20, 20)
-    layout.addWidget(make_how_can_i_help(), stretch=1)
-    layout.addWidget(make_input_bar())
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.addWidget(make_chat_screen())
     return window
 
 
