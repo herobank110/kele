@@ -1,2 +1,3 @@
 ollama
 pyside6
+qtawesome

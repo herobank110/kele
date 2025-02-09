@@ -1,10 +1,9 @@
 import asyncio
 from ollama import AsyncClient
-
-
 import sys
 from PySide6.QtCore import Qt
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
+import qtawesome
 
 
 async def chat():
@@ -13,38 +12,74 @@ async def chat():
     print(response.content)
 
 
-def make_searchbar():
+def make_input_bar():
     def on_return_pressed():
         print(edit.text())
         edit.setText("")
 
-    frame = QtWidgets.QFrame()
+    frame = QtWidgets.QFrame(
+        styleSheet="""
+            background-color: #161C2E;
+            border: 1px solid #333848;
+            border-radius: 23;
+        """
+    )
     frame.setLayout(layout := QtWidgets.QHBoxLayout())
     layout.addWidget(
-        edit := QtWidgets.QLineEdit(
-            placeholderText="Message Kele",
+        QtWidgets.QPushButton(
+            icon=qtawesome.icon("mdi.plus", color="#F2DDCC"),
+            iconSize=QtCore.QSize(32, 32),
             styleSheet="""
-                font-size: 18;
-                padding: 10 20;
-                border-radius: 13;
+            QPushButton {
+                border: none;
+                border-radius: 10;
+                padding: 2;
+            }
+            :hover {
+                background-color: #101420;
+            }
             """,
-            returnPressed=on_return_pressed
+        )
+    )
+    layout.addWidget(
+        edit := QtWidgets.QLineEdit(
+            placeholderText="Message Copilot",
+            styleSheet="""
+                padding: 10 20;
+                border-radius: 16;
+                background-color: #0E131F;
+                color: #7E87A6;
+                font-size: 18;
+                font-family: 'Segoe UI';
+                border: none;
+            """,
+            returnPressed=on_return_pressed,
         ),
     )
     return frame
 
 
 def make_window():
-    window = QtWidgets.QMainWindow(windowTitle="kele", centralWidget=QtWidgets.QFrame())
+    window = QtWidgets.QMainWindow(
+        windowTitle="kele",
+        centralWidget=(
+            frame := QtWidgets.QFrame(
+                styleSheet="""
+                    background-color: #101524;
+                """
+            )
+        ),
+    )
     window.setMinimumSize(800, 600)
-    window.centralWidget().setLayout(QtWidgets.QVBoxLayout())
+    frame.setLayout(layout := QtWidgets.QVBoxLayout())
+    layout.setContentsMargins(20, 20, 20, 20)
     h = QtWidgets.QLabel(
         "Hey, how can I help?",
         styleSheet="font-size: 32px;",
         alignment=Qt.AlignmentFlag.AlignCenter,
     )
-    window.centralWidget().layout().addWidget(h)
-    window.centralWidget().layout().addWidget(make_searchbar())
+    layout.addWidget(h, 1)
+    layout.addWidget(make_input_bar())
     return window
 
 
