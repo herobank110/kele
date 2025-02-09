@@ -1,10 +1,10 @@
 import asyncio
+from typing import Callable
 from ollama import AsyncClient
 import sys
 from PySide6.QtCore import Qt
 from PySide6 import QtWidgets, QtCore
 import qtawesome
-
 
 
 async def chat():
@@ -13,13 +13,14 @@ async def chat():
     print(response.content)
 
 
-def make_input_bar():
-    def on_click_new():
-        print("clicked")
-
+def make_input_bar(
+    on_new_chat: Callable[[], None],
+    on_enter: Callable[[str], None],
+):
     def on_return_pressed():
-        print(edit.text())
+        text = edit.text()
         edit.setText("")
+        on_enter(text)
 
     frame = QtWidgets.QFrame(
         styleSheet="""
@@ -43,7 +44,7 @@ def make_input_bar():
                     background-color: #101420;
                 }
             """,
-            clicked=on_click_new,
+            clicked=on_new_chat,
         )
     )
     layout.addWidget(
@@ -76,11 +77,19 @@ def make_how_can_i_help():
 def make_chat_screen():
     chat_history = []
 
+    def on_enter(text: str):
+        print("Hello", text)
+
+    def on_new_chat():
+        print("New chat")
+
     widget = QtWidgets.QWidget()
     widget.setLayout(layout := QtWidgets.QVBoxLayout())
     layout.setContentsMargins(20, 20, 20, 20)
-    layout.addWidget(make_how_can_i_help(), stretch=1)
-    layout.addWidget(make_input_bar())
+    layout.addWidget(stack := QtWidgets.QStackedWidget(), stretch=1)
+    stack.addWidget(make_how_can_i_help())
+    stack.addWidget(QtWidgets.QLabel("Chat screen"))
+    layout.addWidget(make_input_bar(on_enter=on_enter, on_new_chat=on_new_chat))
     return widget
 
 
