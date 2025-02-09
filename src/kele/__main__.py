@@ -13,6 +13,9 @@ async def chat():
 
 
 def make_input_bar():
+    def on_click_new():
+        print("clicked")
+
     def on_return_pressed():
         print(edit.text())
         edit.setText("")
@@ -30,15 +33,16 @@ def make_input_bar():
             icon=qtawesome.icon("mdi.plus", color="#F2DDCC"),
             iconSize=QtCore.QSize(32, 32),
             styleSheet="""
-            QPushButton {
-                border: none;
-                border-radius: 10;
-                padding: 2;
-            }
-            :hover {
-                background-color: #101420;
-            }
+                QPushButton {
+                    border: none;
+                    border-radius: 10;
+                    padding: 2;
+                }
+                :hover {
+                    background-color: #101420;
+                }
             """,
+            clicked=on_click_new,
         )
     )
     layout.addWidget(
