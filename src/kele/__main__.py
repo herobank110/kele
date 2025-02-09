@@ -74,21 +74,68 @@ def make_how_can_i_help():
     )
 
 
+def make_user_chat_message(text: str):
+    widget = QtWidgets.QWidget()
+    layout = QtWidgets.QHBoxLayout(widget)
+    layout.addStretch(20)
+    layout.addWidget(
+        QtWidgets.QLabel(
+            text=text,
+            styleSheet="""
+                background-color: #1D2439;
+                color: #F2DDCC;
+                padding: 10;
+                border-radius: 10;
+                font-size: 12pt;
+                font-family: 'Segoe UI';
+            """,
+            wordWrap=True,
+            textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
+            sizePolicy=QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding),
+        ),
+        alignment=Qt.AlignmentFlag.AlignRight,
+        stretch=80
+    )
+    return widget
+
+
+def make_chat_log():
+    scroll = QtWidgets.QScrollArea(widgetResizable=True)
+    scroll.setWidget(inner := QtWidgets.QWidget(styleSheet="border: 1px solid red;"))
+    inner.setLayout(layout := QtWidgets.QVBoxLayout())
+    layout.addWidget(
+        make_user_chat_message(
+            "It seems like you've entered a string of random characters. Was there something specific you needed help with, or perhaps did you mean to say something\n\n\n else? I'm here to assist you with any questions or topics you'd like to discuss!"
+        )
+    )  # , alignment=Qt.AlignmentFlag.AlignRight)
+    layout.addWidget(
+        make_user_chat_message("Hello")
+    )  # , alignment=Qt.AlignmentFlag.AlignRight)
+    layout.addWidget(
+        make_user_chat_message("Hello")
+    )  # , alignment=Qt.AlignmentFlag.AlignRight)
+    layout.addStretch(1)
+    return scroll
+
+
 def make_chat_screen():
     chat_history = []
 
     def on_enter(text: str):
+        stack.setCurrentIndex(1)
         print("Hello", text)
 
     def on_new_chat():
-        print("New chat")
+        chat_history = []
+        stack.setCurrentIndex(0)
 
     widget = QtWidgets.QWidget()
     widget.setLayout(layout := QtWidgets.QVBoxLayout())
     layout.setContentsMargins(20, 20, 20, 20)
     layout.addWidget(stack := QtWidgets.QStackedWidget(), stretch=1)
     stack.addWidget(make_how_can_i_help())
-    stack.addWidget(QtWidgets.QLabel("Chat screen"))
+    stack.addWidget(make_chat_log())
+    stack.setCurrentIndex(1)
     layout.addWidget(make_input_bar(on_enter=on_enter, on_new_chat=on_new_chat))
     return widget
 
