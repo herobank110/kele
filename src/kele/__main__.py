@@ -103,12 +103,12 @@ def make_user_chat_message(text: str):
 def make_chat_bot_message_actions():
     widget = QtWidgets.QWidget()
     layout = QtWidgets.QHBoxLayout(widget)
-    layout.addWidget(
-        make_icon_button("mdi.thumb-up", on_click=lambda: print("👍"))
-    )
-    layout.addWidget(
-        make_icon_button("mdi.thumb-down", on_click=lambda: print("👎"))
-    )
+    # layout.addWidget(
+    #     make_icon_button("mdi.thumb-up", on_click=lambda: print("👍"))
+    # )
+    # layout.addWidget(
+    #     make_icon_button("mdi.thumb-down", on_click=lambda: print("👎"))
+    # )
     layout.addWidget(
         make_icon_button("mdi.content-copy", on_click=lambda: print("📤"))
     )
