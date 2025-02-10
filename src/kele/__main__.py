@@ -1,4 +1,6 @@
 import asyncio
+import threading
+from collections import deque
 from typing import Callable, Literal
 from ollama import AsyncClient, chat
 import sys
@@ -175,28 +177,33 @@ def make_chat_screen():
 
     async def on_enter(text: str):
         chat_history.append({"role": "user", "content": text})
+
+        # Currently experiencing a bug with this simple line:
+        # await ollama_client.chat(model="deepseek-r1", messages=chat_history)
+        # AttributeError: 'QAsyncioTask' object has no attribute '_must_cancel'
+        # Instead route the chat request through a worker thread that
+        # has a normal asyncio loop and pass the result back through a
+        # future object.
+
+        future = asyncio.get_event_loop().create_future()
+
+        async def chat_request():
+            response = await ollama_client.chat(
+                model="deepseek-r1", messages=chat_history
+            )
+            future.get_loop().call_soon_threadsafe(lambda: future.set_result(response))
+
+        chat_request_queue.append(chat_request)
+
+        chat_history.append({"role": "assistant", "content": "Thinking..."})
         set_chat_history(chat_history)
 
-        # chat_log_ref[0].setParent(None)
-        # stack.addWidget(chat_log := make_chat_log(chat_history))
-        # chat_log_ref[0] = chat_log
-        # stack.setCurrentIndex(1)
-
-        # chat_history.append({"role": "assistant", "content": "Thinking..."})
-
-        # await asyncio.sleep(0.5)
-        # chat_history.append({"role": "assistant", "content": "Thinking..."})
-        # return
-
-        chat_future = ollama_client.chat(model="deepseek-r1", messages=chat_history)
-        asyncio.ensure_future(chat_future)
-        # await asyncio.sleep(0.5)
-
-        # content = (
-        #     response.message.content.replace("<think>", "")
-        #     .replace("</think>", "")
-        #     .strip()
-        # )
+        response = await future
+        content = (
+            response.message.content.replace("<think>", "")
+            .replace("</think>", "")
+            .strip()
+        )
         content = "yes"
         chat_history.append({"role": "assistant", "content": content})
         set_chat_history(chat_history)
@@ -212,7 +219,12 @@ def make_chat_screen():
     stack.addWidget(make_how_can_i_help())
     stack.addWidget(chat_log := make_chat_log(chat_history))
     chat_log_ref[0] = chat_log
-    layout.addWidget(make_input_bar(on_enter=lambda text: asyncio.ensure_future(on_enter(text)), on_new_chat=on_new_chat))
+    layout.addWidget(
+        make_input_bar(
+            on_enter=lambda text: asyncio.ensure_future(on_enter(text)),
+            on_new_chat=on_new_chat,
+        )
+    )
     return widget
 
 
@@ -234,10 +246,31 @@ def make_window():
     return window
 
 
+chat_request_queue = deque()
+about_to_quit = False
+
+
+async def worker_thread():
+    while not about_to_quit:
+        try:
+            request = chat_request_queue.pop()
+        except IndexError:
+            pass
+        else:
+            await request()
+        await asyncio.sleep(0.0001)
+
+
 def main():
-    _app = QtWidgets.QApplication(sys.argv)
+    def on_quit():
+        global about_to_quit
+        about_to_quit = True
+
+    app = QtWidgets.QApplication(sys.argv)
+    app.aboutToQuit.connect(on_quit)
     window = make_window()
     window.show()
+    threading.Thread(target=lambda: asyncio.run(worker_thread())).start()
     QtAsyncio.run(handle_sigint=True)
 
 
