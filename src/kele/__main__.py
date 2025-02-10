@@ -1,21 +1,27 @@
 import asyncio
 from typing import Callable, Literal
-from ollama import AsyncClient
+from ollama import AsyncClient, chat
 import sys
 from PySide6.QtCore import Qt
 from PySide6 import QtWidgets, QtCore
 import qtawesome
 
 
-async def chat():
-    message = {"role": "user", "content": "Why is the sky blue?"}
-    response = await AsyncClient().chat(model="deepseek-r1", messages=[message])
-    print(response.content)
+# async def chat():
+#     message = {"role": "user", "content": "Why is the sky blue?"}
+#     response = await AsyncClient().chat(model="deepseek-r1", messages=[message])
+#     print(response.content)
+
+
+# asyncio.run(chat())
 
 
 IconSize = Literal["small", "large"]
 
-def make_icon_button(icon_name: str, size: IconSize = "small", on_click: Callable[[], None] = None):
+
+def make_icon_button(
+    icon_name: str, size: IconSize = "small", on_click: Callable[[], None] = None
+):
     size_px = 24 if size == "small" else 32
     return QtWidgets.QPushButton(
         icon=qtawesome.icon(icon_name, color="#F2DDCC"),
@@ -109,9 +115,7 @@ def make_chat_bot_message_actions():
     # layout.addWidget(
     #     make_icon_button("mdi.thumb-down", on_click=lambda: print("👎"))
     # )
-    layout.addWidget(
-        make_icon_button("mdi.content-copy", on_click=lambda: print("📤"))
-    )
+    layout.addWidget(make_icon_button("mdi.content-copy", on_click=lambda: print("📤")))
     return widget
 
 
@@ -138,14 +142,18 @@ def make_bot_chat_message(text: str):
     return widget
 
 
-def make_chat_log(chat_history: list[str]):
+def make_chat_log(chat_history: list[dict]):
     scroll = QtWidgets.QScrollArea(widgetResizable=True)
     scroll.setWidget(inner := QtWidgets.QWidget())
     inner.setLayout(layout := QtWidgets.QVBoxLayout())
     for message in chat_history:
-        layout.addWidget(
-            make_user_chat_message(message), alignment=Qt.AlignmentFlag.AlignRight
-        )
+        if message["role"] == "user":
+            layout.addWidget(
+                make_user_chat_message(message["content"]),
+                alignment=Qt.AlignmentFlag.AlignRight,
+            )
+        else:
+            layout.addWidget(make_bot_chat_message(message["content"]))
     # layout.addWidget(
     #     make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
     # )
@@ -164,10 +172,19 @@ def make_chat_log(chat_history: list[str]):
 def make_chat_screen():
     chat_history = []
 
-    chat_log_ref = []
+    chat_log_ref = [None]
 
     def on_enter(text: str):
-        chat_history.append(text)
+        chat_history.append({"role": "user", "content": text})
+
+        chat_log_ref[0].setParent(None)
+        stack.addWidget(chat_log := make_chat_log(chat_history))
+        chat_log_ref[0] = chat_log
+        stack.setCurrentIndex(1)
+
+        response = chat(model="deepseek-r1", messages=chat_history)
+        content = response.message.content.replace("<think>", "").replace("</think>", "").strip()
+        chat_history.append({"role": "assistant", "content": content})
         chat_log_ref[0].setParent(None)
         stack.addWidget(chat_log := make_chat_log(chat_history))
         chat_log_ref[0] = chat_log
@@ -183,7 +200,7 @@ def make_chat_screen():
     layout.addWidget(stack := QtWidgets.QStackedWidget(), stretch=1)
     stack.addWidget(make_how_can_i_help())
     stack.addWidget(chat_log := make_chat_log(chat_history))
-    chat_log_ref.append(chat_log)
+    chat_log_ref[0] = chat_log
     layout.addWidget(make_input_bar(on_enter=on_enter, on_new_chat=on_new_chat))
     return widget
 
