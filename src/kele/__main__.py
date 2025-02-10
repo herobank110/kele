@@ -51,12 +51,8 @@ def make_input_bar(
         """
     )
     frame.setLayout(layout := QtWidgets.QHBoxLayout())
-    async def f():
-        print("hi")
-        await asyncio.sleep(0.5)
-        print("hi")
     layout.addWidget(
-        make_icon_button(icon_name="mdi.plus", size="large", on_click=lambda: asyncio.ensure_future(f())),
+        make_icon_button(icon_name="mdi.plus", size="large", on_click=on_new_chat),
     )
     layout.addWidget(
         edit := QtWidgets.QLineEdit(
@@ -169,28 +165,41 @@ def make_chat_log(chat_history: list[dict]):
 
 def make_chat_screen():
     chat_history = []
-
     chat_log_ref = [None]
+
+    def set_chat_history(value: list):
+        chat_log_ref[0].setParent(None)
+        stack.addWidget(chat_log := make_chat_log(value))
+        chat_log_ref[0] = chat_log
+        stack.setCurrentIndex(1)
 
     async def on_enter(text: str):
         chat_history.append({"role": "user", "content": text})
+        set_chat_history(chat_history)
 
-        chat_log_ref[0].setParent(None)
-        stack.addWidget(chat_log := make_chat_log(chat_history))
-        chat_log_ref[0] = chat_log
-        stack.setCurrentIndex(1)
+        # chat_log_ref[0].setParent(None)
+        # stack.addWidget(chat_log := make_chat_log(chat_history))
+        # chat_log_ref[0] = chat_log
+        # stack.setCurrentIndex(1)
 
-        response = await ollama_client.chat(model="deepseek-r1", messages=chat_history)
-        content = (
-            response.message.content.replace("<think>", "")
-            .replace("</think>", "")
-            .strip()
-        )
+        # chat_history.append({"role": "assistant", "content": "Thinking..."})
+
+        # await asyncio.sleep(0.5)
+        # chat_history.append({"role": "assistant", "content": "Thinking..."})
+        # return
+
+        chat_future = ollama_client.chat(model="deepseek-r1", messages=chat_history)
+        asyncio.ensure_future(chat_future)
+        # await asyncio.sleep(0.5)
+
+        # content = (
+        #     response.message.content.replace("<think>", "")
+        #     .replace("</think>", "")
+        #     .strip()
+        # )
+        content = "yes"
         chat_history.append({"role": "assistant", "content": content})
-        chat_log_ref[0].setParent(None)
-        stack.addWidget(chat_log := make_chat_log(chat_history))
-        chat_log_ref[0] = chat_log
-        stack.setCurrentIndex(1)
+        set_chat_history(chat_history)
 
     def on_new_chat():
         chat_history.clear()
