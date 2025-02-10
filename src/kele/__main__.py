@@ -204,7 +204,7 @@ def make_chat_screen():
             .replace("</think>", "")
             .strip()
         )
-        content = "yes"
+        chat_history.pop()  # remove the 'thinking...'
         chat_history.append({"role": "assistant", "content": content})
         set_chat_history(chat_history)
 
