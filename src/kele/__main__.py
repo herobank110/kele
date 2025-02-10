@@ -205,7 +205,7 @@ def make_chat_screen():
         stack.setCurrentIndex(0)
 
     widget = QtWidgets.QWidget()
-    widget.setLayout(layout := QtWidgets.QVBoxLayout())
+    layout = QtWidgets.QVBoxLayout(widget)
     layout.setContentsMargins(20, 20, 20, 20)
     layout.addWidget(stack := QtWidgets.QStackedWidget(), stretch=1)
     stack.addWidget(make_how_can_i_help())
