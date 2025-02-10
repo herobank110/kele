@@ -1,8 +1,9 @@
 import asyncio
+import re
 import threading
 from collections import deque
 from typing import Callable, Literal
-from ollama import AsyncClient, chat
+from ollama import AsyncClient
 import sys
 from PySide6.QtCore import Qt
 from PySide6 import QtWidgets, QtCore, QtAsyncio
@@ -96,8 +97,10 @@ def make_user_chat_message(text: str):
             """,
         wordWrap=True,
         textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
+        minimumSize=QtCore.QSize(10, 10),
+        maximumSize=QtCore.QSize(600, 16777215),
         sizePolicy=QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding
+            QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum
         ),
     )
 
@@ -105,12 +108,6 @@ def make_user_chat_message(text: str):
 def make_chat_bot_message_actions():
     widget = QtWidgets.QWidget()
     layout = QtWidgets.QHBoxLayout(widget)
-    # layout.addWidget(
-    #     make_icon_button("mdi.thumb-up", on_click=lambda: print("👍"))
-    # )
-    # layout.addWidget(
-    #     make_icon_button("mdi.thumb-down", on_click=lambda: print("👎"))
-    # )
     layout.addWidget(make_icon_button("mdi.content-copy", on_click=lambda: print("📤")))
     return widget
 
@@ -132,9 +129,9 @@ def make_bot_chat_message(text: str):
             textInteractionFlags=Qt.TextInteractionFlag.TextBrowserInteraction,
         )
     )
-    layout.addWidget(
-        make_chat_bot_message_actions(), alignment=Qt.AlignmentFlag.AlignLeft
-    )
+    # layout.addWidget(
+    #     make_chat_bot_message_actions(), alignment=Qt.AlignmentFlag.AlignLeft
+    # )
     return widget
 
 
@@ -150,17 +147,8 @@ def make_chat_log(chat_history: list[dict]):
             )
         else:
             layout.addWidget(make_bot_chat_message(message["content"]))
-    # layout.addWidget(
-    #     make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
-    # )
-    # layout.addWidget(
-    #     make_bot_chat_message(
-    #         "Hey! It seems like you're really curious about how I'm doing. I'm great, thanks! What's on your mind today? 😊"
-    #     )
-    # )
-    # layout.addWidget(
-    #     make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
-    # )
+    # TODO: fix scroll to bottom!
+    scroll.ensureVisible(1, inner.sizeHint().height() - 100)
     layout.addStretch(1)
     return scroll
 
@@ -199,10 +187,14 @@ def make_chat_screen():
         set_chat_history(chat_history)
 
         response = await future
-        content = (
-            response.message.content.replace("<think>", "")
-            .replace("</think>", "")
-            .strip()
+        content = re.sub(
+            "^>\n+",
+            "",
+            (
+                response.message.content.replace("<think>", "")
+                .replace("</think>", "")
+                .strip()
+            ),
         )
         chat_history.pop()  # remove the 'thinking...'
         chat_history.append({"role": "assistant", "content": content})
