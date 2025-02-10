@@ -3,17 +3,11 @@ from typing import Callable, Literal
 from ollama import AsyncClient, chat
 import sys
 from PySide6.QtCore import Qt
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtAsyncio
 import qtawesome
 
 
-# async def chat():
-#     message = {"role": "user", "content": "Why is the sky blue?"}
-#     response = await AsyncClient().chat(model="deepseek-r1", messages=[message])
-#     print(response.content)
-
-
-# asyncio.run(chat())
+ollama_client = AsyncClient()
 
 
 IconSize = Literal["small", "large"]
@@ -57,8 +51,12 @@ def make_input_bar(
         """
     )
     frame.setLayout(layout := QtWidgets.QHBoxLayout())
+    async def f():
+        print("hi")
+        await asyncio.sleep(0.5)
+        print("hi")
     layout.addWidget(
-        make_icon_button(icon_name="mdi.plus", size="large", on_click=on_new_chat),
+        make_icon_button(icon_name="mdi.plus", size="large", on_click=lambda: asyncio.ensure_future(f())),
     )
     layout.addWidget(
         edit := QtWidgets.QLineEdit(
@@ -174,7 +172,7 @@ def make_chat_screen():
 
     chat_log_ref = [None]
 
-    def on_enter(text: str):
+    async def on_enter(text: str):
         chat_history.append({"role": "user", "content": text})
 
         chat_log_ref[0].setParent(None)
@@ -182,8 +180,12 @@ def make_chat_screen():
         chat_log_ref[0] = chat_log
         stack.setCurrentIndex(1)
 
-        response = chat(model="deepseek-r1", messages=chat_history)
-        content = response.message.content.replace("<think>", "").replace("</think>", "").strip()
+        response = await ollama_client.chat(model="deepseek-r1", messages=chat_history)
+        content = (
+            response.message.content.replace("<think>", "")
+            .replace("</think>", "")
+            .strip()
+        )
         chat_history.append({"role": "assistant", "content": content})
         chat_log_ref[0].setParent(None)
         stack.addWidget(chat_log := make_chat_log(chat_history))
@@ -201,7 +203,7 @@ def make_chat_screen():
     stack.addWidget(make_how_can_i_help())
     stack.addWidget(chat_log := make_chat_log(chat_history))
     chat_log_ref[0] = chat_log
-    layout.addWidget(make_input_bar(on_enter=on_enter, on_new_chat=on_new_chat))
+    layout.addWidget(make_input_bar(on_enter=lambda text: asyncio.ensure_future(on_enter(text)), on_new_chat=on_new_chat))
     return widget
 
 
@@ -224,10 +226,10 @@ def make_window():
 
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
+    _app = QtWidgets.QApplication(sys.argv)
     window = make_window()
     window.show()
-    sys.exit(app.exec())
+    QtAsyncio.run(handle_sigint=True)
 
 
 if __name__ == "__main__":
