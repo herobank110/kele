@@ -138,21 +138,25 @@ def make_bot_chat_message(text: str):
     return widget
 
 
-def make_chat_log():
+def make_chat_log(chat_history: list[str]):
     scroll = QtWidgets.QScrollArea(widgetResizable=True)
     scroll.setWidget(inner := QtWidgets.QWidget())
     inner.setLayout(layout := QtWidgets.QVBoxLayout())
-    layout.addWidget(
-        make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
-    )
-    layout.addWidget(
-        make_bot_chat_message(
-            "Hey! It seems like you're really curious about how I'm doing. I'm great, thanks! What's on your mind today? 😊"
+    for message in chat_history:
+        layout.addWidget(
+            make_user_chat_message(message), alignment=Qt.AlignmentFlag.AlignRight
         )
-    )
-    layout.addWidget(
-        make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
-    )
+    # layout.addWidget(
+    #     make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
+    # )
+    # layout.addWidget(
+    #     make_bot_chat_message(
+    #         "Hey! It seems like you're really curious about how I'm doing. I'm great, thanks! What's on your mind today? 😊"
+    #     )
+    # )
+    # layout.addWidget(
+    #     make_user_chat_message("Hello"), alignment=Qt.AlignmentFlag.AlignRight
+    # )
     layout.addStretch(1)
     return scroll
 
@@ -160,12 +164,17 @@ def make_chat_log():
 def make_chat_screen():
     chat_history = []
 
+    chat_log_ref = []
+
     def on_enter(text: str):
+        chat_history.append(text)
+        chat_log_ref[0].setParent(None)
+        stack.addWidget(chat_log := make_chat_log(chat_history))
+        chat_log_ref[0] = chat_log
         stack.setCurrentIndex(1)
-        print("Hello", text)
 
     def on_new_chat():
-        chat_history = []
+        chat_history.clear()
         stack.setCurrentIndex(0)
 
     widget = QtWidgets.QWidget()
@@ -173,8 +182,8 @@ def make_chat_screen():
     layout.setContentsMargins(20, 20, 20, 20)
     layout.addWidget(stack := QtWidgets.QStackedWidget(), stretch=1)
     stack.addWidget(make_how_can_i_help())
-    stack.addWidget(make_chat_log())
-    stack.setCurrentIndex(1)
+    stack.addWidget(chat_log := make_chat_log(chat_history))
+    chat_log_ref.append(chat_log)
     layout.addWidget(make_input_bar(on_enter=on_enter, on_new_chat=on_new_chat))
     return widget
 
