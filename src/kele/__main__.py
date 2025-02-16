@@ -147,8 +147,13 @@ def make_chat_log(chat_history: list[dict]):
             )
         else:
             layout.addWidget(make_bot_chat_message(message["content"]))
-    # TODO: fix scroll to bottom!
-    scroll.ensureVisible(1, inner.sizeHint().height() - 100)
+    # fix scroll to bottom!
+    scroll.verticalScrollBar().rangeChanged.connect(
+        lambda: scroll.verticalScrollBar().setValue(
+            scroll.verticalScrollBar().maximum()
+        ),
+        Qt.ConnectionType.SingleShotConnection,
+    )
     layout.addStretch(1)
     return scroll
 
